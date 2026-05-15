@@ -1,12 +1,628 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
+    <title>BelajarBicara - Latih Public Speaking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .login-bg { 
+            background-image: linear-gradient(rgba(79, 70, 229, 0.85), rgba(17, 24, 39, 0.95)), 
+            url('https://images.unsplash.com/photo-1475721027785-f74dea327912?auto=format&fit=crop&q=80&w=1280');
+            background-size: cover; background-position: center;
+        }
+        #video-preview-prep, #video-preview-random { transform: scaleX(-1); background: #111; border-radius: 2rem; }
+        .nav-active { background-color: #eef2ff; color: #4f46e5; font-weight: 800; border-right: 4px solid #4f46e5; }
+        .recording-pulse { animation: pulse 1.5s infinite; color: #ef4444; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .loader { border: 2px solid #f3f3f3; border-top: 2px solid #4f46e5; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body>
-    <h1>Hello World</h1>
-    <p>Welcome to my website!</p>
+<body class="h-screen overflow-hidden flex flex-col">
+
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center login-bg px-4">
+        <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center">
+            <div class="mb-8">
+                <div class="w-20 h-20 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform -rotate-6">
+                    <i class="fas fa-microphone text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">BelajarBicara</h1>
+                <p class="text-gray-500 text-sm mt-2">Kuasai Panggung, Kuasai Dunia</p>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="text" id="auth-user" class="w-full p-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Username">
+                <input type="password" id="auth-pass" class="w-full p-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Password">
+                
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="handleAuth('login')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg transition duration-300">Masuk</button>
+                    <button onclick="handleAuth('register')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 rounded-2xl transition duration-300">Daftar</button>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-100 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                Gurumasakini 2026 &bull; <a href="https://instagram.com/ryzaraccman" target="_blank" class="hover:text-indigo-600">IG: @Ryzaraccman</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" class="hidden flex h-full w-full">
+        <!-- Sidebar Navigation -->
+        <aside class="w-20 lg:w-72 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
+            <div class="p-8 flex items-center gap-4">
+                <div class="bg-indigo-600 p-2.5 rounded-xl text-white shadow-lg">
+                    <i class="fas fa-microphone text-sm"></i>
+                </div>
+                <span class="hidden lg:block font-extrabold text-xl text-gray-800 tracking-tighter">BelajarBicara</span>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-2">
+                <button onclick="showView('dashboard', this)" class="nav-item w-full flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:text-indigo-600 transition nav-active">
+                    <i class="fas fa-chart-pie text-lg"></i> <span class="hidden lg:block font-bold">Dashboard</span>
+                </button>
+                <button onclick="showView('prep', this)" class="nav-item w-full flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:text-indigo-600 transition">
+                    <i class="fas fa-bullhorn text-lg"></i> <span class="hidden lg:block font-bold">Ngomongin Topik</span>
+                </button>
+                <button onclick="showView('random', this)" class="nav-item w-full flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:text-indigo-600 transition">
+                    <i class="fas fa-cube text-lg"></i> <span class="hidden lg:block font-bold">Ngomongin Objek</span>
+                </button>
+                <button onclick="showView('history', this)" class="nav-item w-full flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:text-indigo-600 transition">
+                    <i class="fas fa-history text-lg"></i> <span class="hidden lg:block font-bold">Riwayat</span>
+                </button>
+            </nav>
+
+            <div class="p-6 border-t border-gray-50">
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl mb-4">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-extrabold shadow-sm" id="user-avatar">?</div>
+                    <div class="hidden lg:block overflow-hidden">
+                        <p class="text-xs font-black text-gray-800 truncate" id="user-name">Guest User</p>
+                        <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-tighter" id="user-level-label">Level 1: Newbie</p>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="w-full flex items-center gap-4 p-4 rounded-2xl text-red-500 hover:bg-red-50 transition">
+                    <i class="fas fa-sign-out-alt text-lg"></i> <span class="hidden lg:block font-bold">Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 bg-gray-50 overflow-y-auto relative flex flex-col">
+            <div class="flex-1">
+                <!-- Dashboard Section -->
+                <section id="view-dashboard" class="view-content p-8 md:p-12">
+                    <div class="max-w-4xl">
+                        <h2 class="text-4xl font-black text-gray-900 mb-2 tracking-tight">Halo, <span id="dash-user" class="text-indigo-600">Speaker</span>!</h2>
+                        <p class="text-gray-500 mb-8" id="level-quote">"Setiap pembicara hebat dulunya adalah pemula yang berani mencoba."</p>
+
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 mb-10 relative overflow-hidden">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+                                <div>
+                                    <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest block mb-1">Status Saat Ini</span>
+                                    <h3 class="text-3xl font-black text-gray-900" id="current-level-name">Newbie Speaker</h3>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Level Berikutnya</span>
+                                    <p class="font-bold text-gray-600" id="next-level-target">Shy Beginner</p>
+                                </div>
+                            </div>
+                            <div class="w-full bg-gray-100 h-4 rounded-full overflow-hidden mb-2">
+                                <div id="level-progress-bar" class="bg-indigo-600 h-full transition-all duration-1000" style="width: 10%;"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <span id="progress-text-sessions">0 Sesi Lagi</span>
+                                <span id="progress-text-minutes">0 Menit Lagi</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                                <i class="fas fa-microphone-lines text-2xl text-indigo-500 mb-4"></i>
+                                <p class="text-3xl font-black text-gray-800" id="stat-sessions">0</p>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Sesi Latihan</p>
+                            </div>
+                            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                                <i class="fas fa-clock text-2xl text-orange-500 mb-4"></i>
+                                <p class="text-3xl font-black text-gray-800" id="stat-minutes">0m</p>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Waktu Bicara</p>
+                            </div>
+                            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                                <i class="fas fa-trophy text-2xl text-yellow-500 mb-4"></i>
+                                <p class="text-3xl font-black text-gray-800" id="stat-avg">0.0</p>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Skor Rata-rata</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Ngomongin Topik (PREP) Section -->
+                <section id="view-prep" class="view-content hidden p-8 md:p-12">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-5 gap-10">
+                            <div class="lg:col-span-2 space-y-6">
+                                <div>
+                                    <h2 class="text-3xl font-black text-gray-900">Ngomongin Topik</h2>
+                                    <!-- Duration Selector -->
+                                    <div class="flex items-center gap-3 mt-4 bg-white w-fit px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
+                                        <button onclick="adjustDuration('prep', -1)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-minus text-xs text-gray-600"></i></button>
+                                        <div class="text-center min-w-[50px]">
+                                            <span id="dur-prep" class="text-sm font-black text-indigo-600">1</span>
+                                            <span class="text-[9px] block text-gray-400 uppercase font-black tracking-tighter">Menit</span>
+                                        </div>
+                                        <button onclick="adjustDuration('prep', 1)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-plus text-xs text-gray-600"></i></button>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-8 rounded-[2.5rem] border border-indigo-100 shadow-sm min-h-[200px] flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 block">Topik Latihan</span>
+                                        <p id="prep-topic-text" class="text-xl font-bold text-gray-800">Klik tombol di bawah untuk ambil topik.</p>
+                                    </div>
+                                    <button onclick="generateTopic('prep')" class="w-full mt-6 bg-indigo-50 text-indigo-600 py-4 rounded-2xl font-bold hover:bg-indigo-100 transition">
+                                        <i class="fas fa-random mr-2"></i> Acak Topik Baru
+                                    </button>
+                                </div>
+                                <!-- PREP Technique Guide -->
+                                <div class="space-y-3">
+                                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teknik PREP:</h4>
+                                    <div class="grid grid-cols-1 gap-2">
+                                        <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-indigo-500 transition cursor-help group">
+                                            <p class="text-xs font-bold text-indigo-600">P: Point</p>
+                                            <p class="text-[10px] text-gray-500">Sampaikan inti pesan atau pendapat Anda secara langsung.</p>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-indigo-500 transition cursor-help">
+                                            <p class="text-xs font-bold text-indigo-600">R: Reason</p>
+                                            <p class="text-[10px] text-gray-500">Berikan alasan logis mengapa pendapat tersebut penting.</p>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-indigo-500 transition cursor-help">
+                                            <p class="text-xs font-bold text-indigo-600">E: Example</p>
+                                            <p class="text-[10px] text-gray-500">Berikan ilustrasi, cerita, atau data untuk memperkuat alasan.</p>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-indigo-500 transition cursor-help">
+                                            <p class="text-xs font-bold text-indigo-600">P: Point</p>
+                                            <p class="text-[10px] text-gray-500">Tutup dengan menegaskan kembali poin utama Anda.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Video Column -->
+                            <div class="lg:col-span-3">
+                                <div class="aspect-video bg-black rounded-[3rem] overflow-hidden relative shadow-2xl">
+                                    <video id="video-preview-prep" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                                    
+                                    <!-- Google Sites Camera Overlay -->
+                                    <div id="cam-overlay-prep" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 text-white p-6 text-center z-20">
+                                        <div class="w-20 h-20 bg-indigo-600/20 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                                            <i class="fas fa-video text-3xl text-indigo-400"></i>
+                                        </div>
+                                        <h3 class="text-lg font-black mb-2">Izin Kamera Diperlukan</h3>
+                                        <p class="text-xs text-gray-400 mb-6 max-w-xs">Klik tombol di bawah untuk memberikan akses kamera pada Google Sites.</p>
+                                        <button onclick="requestCameraAccess('prep')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl text-sm font-black shadow-xl transition-all active:scale-95">
+                                            AKTIFKAN KAMERA SEKARANG
+                                        </button>
+                                    </div>
+
+                                    <div class="absolute top-8 left-8 flex items-center gap-3">
+                                        <div class="bg-black/50 backdrop-blur-md px-5 py-2 rounded-2xl text-white font-mono text-xl border border-white/10" id="timer-prep">00:00</div>
+                                        <div id="rec-status-prep" class="hidden flex items-center gap-2 bg-red-500 px-4 py-2 rounded-2xl text-white text-[10px] font-black uppercase tracking-widest recording-pulse shadow-lg">
+                                            <div class="w-2 h-2 bg-white rounded-full"></div> Recording
+                                        </div>
+                                    </div>
+                                    <button id="rec-btn-prep" onclick="toggleRecording('prep')" class="absolute bottom-8 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-90 transition-all z-10 border-[6px] border-gray-100">
+                                        <div id="rec-icon-prep" class="w-6 h-6 bg-red-500 rounded-full"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Ngomongin Objek Section -->
+                <section id="view-random" class="view-content hidden p-8 md:p-12">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-5 gap-10">
+                            <div class="lg:col-span-2 space-y-6">
+                                <div>
+                                    <h2 class="text-3xl font-black text-gray-900">Ngomongin Objek</h2>
+                                    <div class="flex items-center gap-3 mt-4 bg-white w-fit px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
+                                        <button onclick="adjustDuration('random', -1)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-minus text-xs text-gray-600"></i></button>
+                                        <div class="text-center min-w-[50px]">
+                                            <span id="dur-random" class="text-sm font-black text-indigo-600">5</span>
+                                            <span class="text-[9px] block text-gray-400 uppercase font-black tracking-tighter">Menit</span>
+                                        </div>
+                                        <button onclick="adjustDuration('random', 1)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-plus text-xs text-gray-600"></i></button>
+                                    </div>
+                                </div>
+                                <div class="bg-indigo-600 p-10 rounded-[3rem] text-center text-white shadow-xl relative overflow-hidden">
+                                    <h3 id="obj-name" class="text-4xl font-black mb-4 relative z-10">? ? ?</h3>
+                                    <div class="flex flex-wrap justify-center gap-2 mb-8 relative z-10">
+                                        <span id="kw-1" class="bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-bold">Keyword 1</span>
+                                        <span id="kw-2" class="bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-bold">Keyword 2</span>
+                                    </div>
+                                    <button onclick="generateTopic('random')" class="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black shadow-lg relative z-10 hover:bg-gray-50 transition">Ganti Objek</button>
+                                    <i class="fas fa-box-open absolute -bottom-4 -left-4 text-8xl opacity-10"></i>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-3">
+                                <div class="aspect-video bg-black rounded-[3rem] overflow-hidden relative shadow-2xl">
+                                    <video id="video-preview-random" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                                    
+                                    <!-- Google Sites Camera Overlay -->
+                                    <div id="cam-overlay-random" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 text-white p-6 text-center z-20">
+                                        <div class="w-20 h-20 bg-indigo-600/20 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                                            <i class="fas fa-video text-3xl text-indigo-400"></i>
+                                        </div>
+                                        <h3 class="text-lg font-black mb-2">Izin Kamera Diperlukan</h3>
+                                        <button onclick="requestCameraAccess('random')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl text-sm font-black shadow-xl transition-all">AKTIFKAN KAMERA</button>
+                                    </div>
+
+                                    <div class="absolute top-8 left-8 flex items-center gap-3">
+                                        <div class="bg-black/50 backdrop-blur-md px-5 py-2 rounded-2xl text-white font-mono text-xl border border-white/10" id="timer-random">00:00</div>
+                                        <div id="rec-status-random" class="hidden flex items-center gap-2 bg-red-500 px-4 py-2 rounded-2xl text-white text-[10px] font-black tracking-widest recording-pulse">
+                                            REC
+                                        </div>
+                                    </div>
+                                    <button id="rec-btn-random" onclick="toggleRecording('random')" class="absolute bottom-8 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl transition-all z-10 border-[6px] border-gray-100">
+                                        <div id="rec-icon-random" class="w-6 h-6 bg-red-500 rounded-full"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- History Section -->
+                <section id="view-history" class="view-content hidden p-8 md:p-12">
+                    <div class="max-w-5xl mx-auto">
+                        <h2 class="text-3xl font-black text-gray-900 mb-8">Riwayat Latihan</h2>
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-50 text-[10px] uppercase font-black text-gray-400 tracking-widest border-b">
+                                    <tr>
+                                        <th class="px-8 py-6">Topik</th>
+                                        <th class="px-8 py-6">Durasi</th>
+                                        <th class="px-8 py-6">Waktu</th>
+                                        <th class="px-8 py-6 text-center">Skor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-body" class="text-sm"></tbody>
+                            </table>
+                            <div id="empty-history" class="p-20 text-center text-gray-300">
+                                <i class="fas fa-folder-open text-4xl mb-4"></i>
+                                <p class="font-bold">Belum ada riwayat latihan.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <footer class="p-6 text-center text-[11px] text-gray-400 font-bold tracking-wider uppercase border-t border-gray-50">
+                Gurumasakini 2026 &nbsp;&bull;&nbsp; <a href="https://instagram.com/ryzaraccman" target="_blank" class="hover:text-indigo-600 transition">IG: @Ryzaraccman</a>
+            </footer>
+        </main>
+    </div>
+
+    <!-- UI Overlay Components -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-8 py-4 rounded-2xl text-sm font-bold shadow-2xl opacity-0 transition-all pointer-events-none z-[100]"></div>
+    
+    <div id="loading-overlay" class="fixed inset-0 bg-white/60 backdrop-blur-md z-[200] hidden items-center justify-center">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl flex items-center gap-4">
+            <div class="loader"></div>
+            <span class="font-black text-gray-700 tracking-tight">Menghubungkan...</span>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxwQ8KbIR6FmlBzhm67ERRy1PHqRKJHnayQYiVWOswcnt_bhphuAUOuCvGyVL5TihrI/exec";
+        const DRIVE_FOLDER = "https://drive.google.com/drive/folders/1xUufN-XxIDzWfVYUIjdKFaC2kBuov-32?usp=sharing";
+
+        let currentUser = JSON.parse(localStorage.getItem('belajarBicaraSession')) || null;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let timerInterval;
+        let actualTimeSpent = 0;
+        let isRecording = false;
+
+        const prepTopics = [
+            "Pentingnya sarapan bagi siswa SD", "Bahaya gadget berlebih pada anak", "Manfaat senam pagi di sekolah", 
+            "Kurikulum Merdeka: Kelebihan dan tantangannya", "Pendidikan karakter melalui olahraga", "Mengapa literasi baca itu krusial?",
+            "Peran AI di ruang kelas masa depan", "Filosofi Ki Hajar Dewantara saat ini", "Inovasi media pembelajaran interaktif",
+            "Kebersihan lingkungan sekolah", "Pentingnya sarana PJOK yang layak", "Menumbuhkan jiwa sportivitas",
+            "Masa depan guru di era digital", "Pentingnya numerasi sejak dini", "Membangun sekolah ramah anak",
+            "Pentingnya kerja sama tim dalam proyek kelas"
+        ];
+
+        const objects = ["Peluit", "Bola Basket", "Buku Tulis", "Papan Tulis", "Sepatu Olahraga", "Tas Sekolah", "Laptop", "Meja", "Kursi", "Botol Minum", "Mikroskop", "Peta Dunia", "Jam Dinding", "Penghapus", "Penggaris Busur", "Raket Badminton", "Matras"];
+        const keywords = ["Misterius", "Canggih", "Kuno", "Modern", "Warna-warni", "Rusak", "Sangat Mahal", "Hadiah", "Berat", "Ringan", "Ajaib", "Bau", "Wangi"];
+
+        const levels = [
+            { id: 1, minSessions: 0, minMins: 0, name: "Newbie Speaker", quote: "Setiap pembicara hebat dulunya adalah pemula yang berani mencoba." },
+            { id: 2, minSessions: 3, minMins: 5, name: "Shy Beginner", quote: "Keberanian adalah kunci pertama membuka gerbang komunikasi." },
+            { id: 3, minSessions: 10, minMins: 20, name: "Classroom Orator", quote: "Suaramu adalah alat paling kuat untuk mengubah pandangan orang lain." },
+            { id: 4, minSessions: 25, minMins: 60, name: "Rising Presenter", quote: "Persiapan yang matang mengalahkan rasa takut yang paling besar." },
+            { id: 5, minSessions: 50, minMins: 150, name: "Eloquent Educator", quote: "Bicara bukan sekadar kata, tapi tentang menyentuh hati pendengar." },
+            { id: 6, minSessions: 80, minMins: 300, name: "Influential Talker", quote: "Gunakan jeda untuk memberi ruang bagi pikiran audiensmu." },
+            { id: 7, minSessions: 120, minMins: 500, name: "Dynamic Speaker", quote: "Energi yang kamu bawa ke panggung akan memantul ke audiens." },
+            { id: 8, minSessions: 180, minMins: 800, name: "Master of Rhetoric", quote: "Rethorika yang baik adalah gabungan logika dan emosi." },
+            { id: 9, minSessions: 250, minMins: 1200, name: "Stage Legend", quote: "Kamu bukan lagi berbicara pada mereka, tapi bercerita bersama mereka." },
+            { id: 10, minSessions: 400, minMins: 2000, name: "Superb Global Speaker", quote: "Panggung adalah rumahmu, dan dunia adalah audiensmu." }
+        ];
+
+        // --- Utility Functions ---
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000);
+        }
+
+        function toggleLoading(show) {
+            document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+        }
+
+        function showView(viewId, btn = null) {
+            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('nav-active'));
+            if (btn) btn.classList.add('nav-active');
+            else {
+                // Find matching button if triggered programmatically
+                const items = document.querySelectorAll('.nav-item');
+                items.forEach(i => { if(i.getAttribute('onclick').includes(viewId)) i.classList.add('nav-active'); });
+            }
+            
+            if (viewId === 'prep' || viewId === 'random') {
+                document.getElementById(`cam-overlay-${viewId}`).classList.remove('hidden');
+                resetTimer(viewId);
+            } else {
+                stopCamera();
+            }
+        }
+
+        function adjustDuration(mode, val) {
+            const el = document.getElementById(`dur-${mode}`);
+            let v = parseInt(el.innerText) + val;
+            if (v < 1) v = 1; if (v > 10) v = 10;
+            el.innerText = v;
+            resetTimer(mode);
+        }
+
+        function resetTimer(mode) {
+            const dur = parseInt(document.getElementById(`dur-${mode}`).innerText);
+            document.getElementById(`timer-${mode}`).innerText = `${dur.toString().padStart(2, '0')}:00`;
+        }
+
+        // --- Authentication ---
+        async function handleAuth(action) {
+            const username = document.getElementById('auth-user').value.trim();
+            const password = document.getElementById('auth-pass').value.trim();
+            if (!username || !password) return showToast("Isi username & password!");
+
+            toggleLoading(true);
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action, username, password })
+                });
+                const result = await res.json();
+                if (result.status === "success") {
+                    if (action === 'login') loginSuccess(result.data);
+                    else showToast("Daftar berhasil! Silakan Masuk.");
+                } else showToast(result.message);
+            } catch (e) { showToast("Koneksi gagal. Cek URL GAS!"); }
+            toggleLoading(false);
+        }
+
+        function loginSuccess(userData) {
+            currentUser = userData;
+            localStorage.setItem('belajarBicaraSession', JSON.stringify(userData));
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('dash-user').innerText = currentUser.username;
+            document.getElementById('user-name').innerText = currentUser.username;
+            document.getElementById('user-avatar').innerText = currentUser.username[0].toUpperCase();
+            loadHistory();
+            showView('dashboard');
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('belajarBicaraSession');
+            location.reload();
+        }
+
+        // --- Camera & Recording ---
+        async function requestCameraAccess(mode) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
+                    audio: true 
+                });
+                document.getElementById(`video-preview-${mode}`).srcObject = stream;
+                document.getElementById(`cam-overlay-${mode}`).classList.add('hidden');
+                showToast("Kamera Siap!");
+            } catch (err) {
+                showToast("Gagal akses kamera. Periksa Izin Browser!");
+            }
+        }
+
+        function stopCamera() {
+            ['prep', 'random'].forEach(m => {
+                const v = document.getElementById(`video-preview-${m}`);
+                if (v && v.srcObject) {
+                    v.srcObject.getTracks().forEach(t => t.stop());
+                    v.srcObject = null;
+                }
+            });
+        }
+
+        function toggleRecording(mode) {
+            if (isRecording) {
+                stopRecording(mode);
+            } else {
+                startRecording(mode);
+            }
+        }
+
+        function startRecording(mode) {
+            const stream = document.getElementById(`video-preview-${mode}`).srcObject;
+            if (!stream) return showToast("Aktifkan kamera dulu!");
+
+            recordedChunks = [];
+            actualTimeSpent = 0;
+            isRecording = true;
+            
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = () => processRecording(mode);
+            
+            mediaRecorder.start();
+            document.getElementById(`rec-status-${mode}`).classList.remove('hidden');
+            document.getElementById(`rec-icon-${mode}`).className = "w-6 h-6 bg-gray-800 rounded-sm"; // Square icon for stop
+
+            // Start Countdown
+            let timeLeft = parseInt(document.getElementById(`dur-${mode}`).innerText) * 60;
+            timerInterval = setInterval(() => {
+                actualTimeSpent++;
+                timeLeft--;
+                
+                const m = Math.floor(timeLeft / 60);
+                const s = timeLeft % 60;
+                document.getElementById(`timer-${mode}`).innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) stopRecording(mode);
+            }, 1000);
+        }
+
+        function stopRecording(mode) {
+            if (!isRecording) return;
+            isRecording = false;
+            mediaRecorder.stop();
+            clearInterval(timerInterval);
+            document.getElementById(`rec-status-${mode}`).classList.add('hidden');
+            document.getElementById(`rec-icon-${mode}`).className = "w-6 h-6 bg-red-500 rounded-full";
+            resetTimer(mode);
+        }
+
+        async function processRecording(mode) {
+            toggleLoading(true);
+            const topic = mode === 'prep' ? document.getElementById('prep-topic-text').innerText : document.getElementById('obj-name').innerText;
+            const score = (Math.random() * 1.5 + 3.5).toFixed(1);
+
+            try {
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "saveSession", userID: currentUser.userID,
+                        type: mode === 'prep' ? 'TOPIC' : 'OBJECT',
+                        topic, duration: actualTimeSpent, score
+                    })
+                });
+                
+                showToast("Sesi dicatat!");
+                loadHistory();
+
+                // Download Local
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `BelajarBicara_${Date.now()}.webm`;
+                a.click();
+                
+                setTimeout(() => {
+                    if(confirm("Video terunduh. Klik OK untuk buka folder Cloud (Drive) & simpan salinannya di sana.")) {
+                        window.open(DRIVE_FOLDER, '_blank');
+                    }
+                }, 1000);
+            } catch (e) { showToast("Gagal simpan data ke server."); }
+            toggleLoading(false);
+        }
+
+        // --- Data Management ---
+        function generateTopic(mode) {
+            if (mode === 'prep') {
+                document.getElementById('prep-topic-text').innerText = prepTopics[Math.floor(Math.random() * prepTopics.length)];
+            } else {
+                document.getElementById('obj-name').innerText = objects[Math.floor(Math.random() * objects.length)];
+                document.getElementById('kw-1').innerText = keywords[Math.floor(Math.random() * keywords.length)];
+                document.getElementById('kw-2').innerText = keywords[Math.floor(Math.random() * keywords.length)];
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch(GAS_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: "getHistory", userID: currentUser.userID }) 
+                });
+                const result = await res.json();
+                if (result.status === "success") {
+                    renderHistory(result.data);
+                    updateStats(result.data);
+                }
+            } catch (e) {}
+        }
+
+        function updateStats(data) {
+            const total = data.length;
+            const secs = data.reduce((a, c) => a + c.duration, 0);
+            const mins = Math.floor(secs / 60);
+            const avg = total > 0 ? (data.reduce((a, c) => a + parseFloat(c.score), 0) / total).toFixed(1) : "0.0";
+            
+            document.getElementById('stat-sessions').innerText = total;
+            document.getElementById('stat-minutes').innerText = mins + "m";
+            document.getElementById('stat-avg').innerText = avg;
+
+            const lvlData = calculateLevel(total, mins);
+            document.getElementById('user-level-label').innerText = `Level ${lvlData.current.id}: ${lvlData.current.name.split(' ')[0]}`;
+            document.getElementById('current-level-name').innerText = lvlData.current.name;
+            document.getElementById('level-quote').innerText = `"${lvlData.current.quote}"`;
+            document.getElementById('next-level-target').innerText = lvlData.current.id === 10 ? "MAX LEVEL" : lvlData.next.name;
+            document.getElementById('level-progress-bar').style.width = `${lvlData.progress}%`;
+            
+            document.getElementById('progress-text-sessions').innerText = lvlData.current.id === 10 ? "Legendary" : `${Math.max(0, lvlData.remSessions)} Sesi Lagi`;
+            document.getElementById('progress-text-minutes').innerText = lvlData.current.id === 10 ? "Infinite" : `${Math.max(0, lvlData.remMins)} Menit Lagi`;
+        }
+
+        function calculateLevel(sessions, mins) {
+            let current = levels[0];
+            for (let i = levels.length - 1; i >= 0; i--) {
+                if (sessions >= levels[i].minSessions && mins >= levels[i].minMins) {
+                    current = levels[i];
+                    break;
+                }
+            }
+            const next = levels[current.id] || current;
+            let progress = 100;
+            if (next.id !== current.id) {
+                const diffSessions = next.minSessions - current.minSessions;
+                const earnedSessions = sessions - current.minSessions;
+                progress = Math.min(100, (earnedSessions / diffSessions) * 100);
+            }
+            return { current, next, progress, remSessions: next.minSessions - sessions, remMins: next.minMins - mins };
+        }
+
+        function renderHistory(data) {
+            const body = document.getElementById('history-body');
+            body.innerHTML = "";
+            document.getElementById('empty-history').classList.toggle('hidden', data.length > 0);
+            data.reverse().forEach(item => {
+                const row = `<tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+                    <td class="px-8 py-5 font-bold text-gray-800 text-xs">${item.topic}</td>
+                    <td class="px-8 py-5 text-gray-500 font-mono text-[10px]">${Math.floor(item.duration/60)}m ${item.duration%60}s</td>
+                    <td class="px-8 py-5 text-gray-400 text-[10px]">${new Date(item.timestamp).toLocaleDateString('id-ID')}</td>
+                    <td class="px-8 py-5 text-center"><span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-black text-[10px] shadow-sm">${item.score}</span></td>
+                </tr>`;
+                body.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Initialize App
+        window.onload = () => {
+            if (currentUser) loginSuccess(currentUser);
+        };
+    </script>
 </body>
 </html>
